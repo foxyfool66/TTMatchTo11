@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Tennis Scoreboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation; /* Prevents double-tap zoom on mobile */
+        }
+        .player-score-container {
+            transition: background-color 0.3s ease;
+        }
+        .serving-indicator {
+            transition: opacity 0.3s ease;
+        }
+        .winner-message, .modal {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-content {
+             animation: slideIn 0.4s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- Main Scoreboard App -->
+    <div class="w-full max-w-4xl mx-auto bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8">
+        
+        <header class="text-center mb-6">
+            <h1 class="text-3xl sm:text-4xl font-bold text-cyan-400">Table Tennis Scoreboard</h1>
+            <p class="text-gray-400 mt-1">First to 11 points wins the game. Win by 2.</p>
+        </header>
+
+        <!-- Player Name Inputs -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <input type="text" id="player1Name" class="w-full bg-gray-700 border-2 border-gray-600 rounded-lg p-3 text-center text-xl font-semibold focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Player 1 Name">
+            <input type="text" id="player2Name" class="w-full bg-gray-700 border-2 border-gray-600 rounded-lg p-3 text-center text-xl font-semibold focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Player 2 Name">
+        </div>
+
+        <!-- Scoreboard Display -->
+        <div class="grid grid-cols-2 gap-2 sm:gap-4">
+            <!-- Player 1 Column -->
+            <div id="player1Container" class="player-score-container bg-gray-700/50 rounded-xl p-4 text-center flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-center gap-3">
+                        <div id="p1Server" class="serving-indicator w-4 h-4 bg-cyan-400 rounded-full shadow-lg opacity-0"></div>
+                        <h2 id="p1NameDisplay" class="text-2xl sm:text-3xl font-bold truncate">Player 1</h2>
+                    </div>
+                    <p class="text-7xl sm:text-8xl md:text-9xl font-black my-4" id="p1Score">0</p>
+                </div>
+                <div class="mt-auto">
+                    <p class="text-lg text-gray-400">Games Won</p>
+                    <p class="text-4xl font-bold" id="p1Games">0</p>
+                </div>
+            </div>
+
+            <!-- Player 2 Column -->
+            <div id="player2Container" class="player-score-container bg-gray-700/50 rounded-xl p-4 text-center flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-center gap-3">
+                         <div id="p2Server" class="serving-indicator w-4 h-4 bg-cyan-400 rounded-full shadow-lg opacity-0"></div>
+                        <h2 id="p2NameDisplay" class="text-2xl sm:text-3xl font-bold truncate">Player 2</h2>
+                    </div>
+                    <p class="text-7xl sm:text-8xl md:text-9xl font-black my-4" id="p2Score">0</p>
+                </div>
+                <div class="mt-auto">
+                    <p class="text-lg text-gray-400">Games Won</p>
+                    <p class="text-4xl font-bold" id="p2Games">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Score Buttons -->
+        <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-4">
+            <div class="flex gap-2">
+                <button id="p1ScoreBtn" class="w-3/4 bg-gradient-to-br from-green-500 to-green-600 text-white font-bold py-6 rounded-lg text-2xl shadow-lg hover:opacity-90 active:scale-95 transform transition-transform duration-150">+1</button>
+                <button id="p1ScoreMinusBtn" class="w-1/4 bg-gradient-to-br from-yellow-500 to-yellow-600 text-white font-bold py-6 rounded-lg text-2xl shadow-lg hover:opacity-90 active:scale-95 transform transition-transform duration-150">-1</button>
+            </div>
+            <div class="flex gap-2">
+                <button id="p2ScoreBtn" class="w-3/4 bg-gradient-to-br from-green-500 to-green-600 text-white font-bold py-6 rounded-lg text-2xl shadow-lg hover:opacity-90 active:scale-95 transform transition-transform duration-150">+1</button>
+                <button id="p2ScoreMinusBtn" class="w-1/4 bg-gradient-to-br from-yellow-500 to-yellow-600 text-white font-bold py-6 rounded-lg text-2xl shadow-lg hover:opacity-90 active:scale-95 transform transition-transform duration-150">-1</button>
+            </div>
+        </div>
+        
+        <!-- Score History -->
+        <div class="mt-6">
+            <h3 class="text-lg font-bold text-gray-400 text-center border-b border-gray-700 pb-2 mb-3">Game History</h3>
+            <div id="mainScoreHistoryList" class="space-y-2 max-h-24 overflow-y-auto p-2 rounded-lg bg-gray-900/30">
+                <!-- History will be populated here -->
+            </div>
+        </div>
+
+        <div id="winnerMessageContainer" class="text-center mt-6 min-h-[30px] flex items-center justify-center"></div>
+
+        <!-- Controls -->
+        <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <label for="matchType" class="font-semibold text-gray-300">Match:</label>
+                <select id="matchType" class="bg-gray-700 border border-gray-600 rounded-md p-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500">
+                    <option value="3">Best of 3</option>
+                    <option value="5" selected>Best of 5</option>
+                    <option value="7">Best of 7</option>
+                </select>
+            </div>
+            <button id="resetBtn" class="w-full sm:w-auto bg-gradient-to-br from-red-600 to-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:opacity-90 active:scale-95 transform transition-transform duration-150">New Match</button>
+        </div>
+    </div>
+
+    <!-- Coin Toss Modal -->
+    <div id="coinTossModal" class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-gray-800 rounded-2xl shadow-2xl p-8 text-center w-full max-w-md">
+            <h2 class="text-3xl font-bold text-cyan-400 mb-4">Coin Toss</h2>
+            <p class="text-gray-300 mb-6">Winner chooses who serves first.</p>
+            <div id="tossChoiceContainer" class="flex justify-center gap-4 mb-6">
+                <button id="headsBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg">Heads</button>
+                <button id="tailsBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-lg">Tails</button>
+            </div>
+            <div id="tossResultContainer" class="text-center min-h-[80px]">
+                <p id="tossResultText" class="text-2xl font-bold text-yellow-400"></p>
+            </div>
+            <div id="serverChoiceContainer" class="hidden mt-4">
+                <p class="text-gray-300 mb-4">Who will serve first?</p>
+                <div class="flex justify-center gap-4">
+                    <button id="p1StartsBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg"></button>
+                    <button id="p2StartsBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game End Modal -->
+    <div id="gameEndModal" class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-gray-800 rounded-2xl shadow-2xl p-8 text-center w-full max-w-md">
+            <h2 id="gameEndTitle" class="text-3xl font-bold text-cyan-400 mb-2">Game Over</h2>
+            <p id="gameEndWinner" class="text-xl font-semibold text-yellow-400 mb-4"></p>
+            <div class="bg-gray-900/50 rounded-lg p-4 mb-6">
+                <h3 class="text-lg font-bold text-gray-300 border-b border-gray-600 pb-2 mb-3">Score History</h3>
+                <ul id="modalScoreHistoryList" class="text-left space-y-2">
+                    <!-- Score history will be populated here -->
+                </ul>
+            </div>
+            <button id="nextGameBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-lg">Start Next Game</button>
+        </div>
+    </div>
+
+
+    <script>
+        // DOM Elements
+        const p1 = { nameInput: document.getElementById('player1Name'), nameDisplay: document.getElementById('p1NameDisplay'), scoreDisplay: document.getElementById('p1Score'), gamesDisplay: document.getElementById('p1Games'), scoreBtn: document.getElementById('p1ScoreBtn'), scoreMinusBtn: document.getElementById('p1ScoreMinusBtn'), serverIndicator: document.getElementById('p1Server'), container: document.getElementById('player1Container') };
+        const p2 = { nameInput: document.getElementById('player2Name'), nameDisplay: document.getElementById('p2NameDisplay'), scoreDisplay: document.getElementById('p2Score'), gamesDisplay: document.getElementById('p2Games'), scoreBtn: document.getElementById('p2ScoreBtn'), scoreMinusBtn: document.getElementById('p2ScoreMinusBtn'), serverIndicator: document.getElementById('p2Server'), container: document.getElementById('player2Container') };
+        const resetBtn = document.getElementById('resetBtn');
+        const matchTypeSelect = document.getElementById('matchType');
+        const winnerMessageContainer = document.getElementById('winnerMessageContainer');
+        const mainScoreHistoryList = document.getElementById('mainScoreHistoryList');
+
+        // Coin Toss Modal Elements
+        const coinTossModal = document.getElementById('coinTossModal');
+        const headsBtn = document.getElementById('headsBtn');
+        const tailsBtn = document.getElementById('tailsBtn');
+        const tossResultText = document.getElementById('tossResultText');
+        const serverChoiceContainer = document.getElementById('serverChoiceContainer');
+        const p1StartsBtn = document.getElementById('p1StartsBtn');
+        const p2StartsBtn = document.getElementById('p2StartsBtn');
+        const tossChoiceContainer = document.getElementById('tossChoiceContainer');
+
+        // Game End Modal Elements
+        const gameEndModal = document.getElementById('gameEndModal');
+        const gameEndTitle = document.getElementById('gameEndTitle');
+        const gameEndWinner = document.getElementById('gameEndWinner');
+        const modalScoreHistoryList = document.getElementById('modalScoreHistoryList');
+        const nextGameBtn = document.getElementById('nextGameBtn');
+
+        // Game State
+        let state = { p1Score: 0, p2Score: 0, p1Games: 0, p2Games: 0, server: 0, matchStartServer: 1, matchOver: false, gamesToWin: 3, scoreHistory: [] };
+
+        // --- INITIALIZATION ---
+        function initialize() {
+            updateDisplay();
+            addEventListeners();
+            disableScoreButtons();
+            showCoinTossModal();
+            updateScoreHistoryDisplay();
+        }
+
+        function addEventListeners() {
+            p1.scoreBtn.addEventListener('click', () => handleScore(1));
+            p2.scoreBtn.addEventListener('click', () => handleScore(2));
+            p1.scoreMinusBtn.addEventListener('click', () => handleScoreCorrection(1));
+            p2.scoreMinusBtn.addEventListener('click', () => handleScoreCorrection(2));
+            resetBtn.addEventListener('click', resetMatch);
+            matchTypeSelect.addEventListener('change', handleMatchTypeChange);
+            p1.nameInput.addEventListener('input', (e) => updateName(p1, e.target.value, 'Player 1'));
+            p2.nameInput.addEventListener('input', (e) => updateName(p2, e.target.value, 'Player 2'));
+            headsBtn.addEventListener('click', () => handleCoinToss('Heads'));
+            tailsBtn.addEventListener('click', () => handleCoinToss('Tails'));
+            p1StartsBtn.addEventListener('click', () => selectInitialServer(1));
+            p2StartsBtn.addEventListener('click', () => selectInitialServer(2));
+            nextGameBtn.addEventListener('click', handleNextGame);
+        }
+
+        // --- MODAL LOGIC (COIN TOSS & GAME END) ---
+        function showCoinTossModal() {
+            p1StartsBtn.textContent = `${p1.nameDisplay.textContent} Starts`;
+            p2StartsBtn.textContent = `${p2.nameDisplay.textContent} Starts`;
+            coinTossModal.classList.remove('hidden');
+            serverChoiceContainer.classList.add('hidden');
+            tossChoiceContainer.classList.remove('hidden');
+            tossResultText.textContent = '';
+            headsBtn.disabled = false;
+            tailsBtn.disabled = false;
+        }
+
+        function handleCoinToss(choice) {
+            headsBtn.disabled = true;
+            tailsBtn.disabled = true;
+            const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
+            tossResultText.textContent = `It's ${result}!`;
+            setTimeout(() => {
+                tossChoiceContainer.classList.add('hidden');
+                serverChoiceContainer.classList.remove('hidden');
+            }, 1500);
+        }
+        
+        function selectInitialServer(player) {
+            state.matchStartServer = player;
+            state.server = player;
+            coinTossModal.classList.add('hidden');
+            enableScoreButtons();
+            updateDisplay();
+        }
+
+        function showGameEndModal() {
+            const lastGame = state.scoreHistory[state.scoreHistory.length - 1];
+            const winnerName = lastGame.p1Score > lastGame.p2Score ? p1.nameDisplay.textContent : p2.nameDisplay.textContent;
+            gameEndWinner.textContent = `${winnerName} wins the game ${lastGame.p1Score} - ${lastGame.p2Score}`;
+            
+            // Populate score history in the modal
+            modalScoreHistoryList.innerHTML = '';
+            state.scoreHistory.forEach((game, index) => {
+                const li = document.createElement('li');
+                li.className = "flex justify-between items-center bg-gray-700/50 p-2 rounded-md";
+                const gameWinner = game.p1Score > game.p2Score ? p1.nameDisplay.textContent : p2.nameDisplay.textContent;
+                li.innerHTML = `<span><span class="font-bold text-gray-400">Game ${index + 1}:</span> ${gameWinner}</span><span class="font-bold text-lg">${game.p1Score} - ${game.p2Score}</span>`;
+                modalScoreHistoryList.appendChild(li);
+            });
+
+            if (state.matchOver) {
+                gameEndTitle.textContent = "Match Over!";
+                nextGameBtn.textContent = "View Final Results";
+            } else {
+                gameEndTitle.textContent = "Game Over";
+                nextGameBtn.textContent = "Start Next Game";
+            }
+            gameEndModal.classList.remove('hidden');
+        }
+
+        function handleNextGame() {
+            gameEndModal.classList.add('hidden');
+            if (!state.matchOver) {
+                resetGame();
+                updateDisplay();
+            }
+        }
+
+        // --- CORE GAME LOGIC ---
+        function handleScore(player) {
+            if (state.matchOver) return;
+            if (player === 1) state.p1Score++; else state.p2Score++;
+            checkGameWin();
+            if (!state.matchOver) updateServer();
+            updateDisplay();
+        }
+
+        function handleScoreCorrection(player) {
+            if (state.matchOver) return;
+            if (player === 1 && state.p1Score > 0) state.p1Score--;
+            else if (player === 2 && state.p2Score > 0) state.p2Score--;
+            updateServer();
+            updateDisplay();
+        }
+
+        function checkGameWin() {
+            const { p1Score, p2Score } = state;
+            const p1Wins = p1Score >= 11 && p1Score >= p2Score + 2;
+            const p2Wins = p2Score >= 11 && p2Score >= p1Score + 2;
+
+            if (p1Wins || p2Wins) {
+                if (p1Wins) state.p1Games++;
+                if (p2Wins) state.p2Games++;
+                
+                state.scoreHistory.push({ p1Score: state.p1Score, p2Score: state.p2Score });
+                updateScoreHistoryDisplay();
+                checkMatchWin();
+                showGameEndModal();
+                updateDisplay();
+                disableScoreButtons();
+            }
+        }
+        
+        function checkMatchWin() {
+            const p1MatchWin = state.p1Games === state.gamesToWin;
+            const p2MatchWin = state.p2Games === state.gamesToWin;
+            if (p1MatchWin || p2MatchWin) {
+                state.matchOver = true;
+                const winnerName = p1MatchWin ? p1.nameDisplay.textContent : p2.nameDisplay.textContent;
+                showWinnerMessage(`${winnerName} WINS THE MATCH!`, true);
+            }
+        }
+
+        function updateServer() {
+            const totalScore = state.p1Score + state.p2Score;
+            if (state.p1Score >= 10 && state.p2Score >= 10) {
+                 const pointsAfterDeuce = totalScore - 20;
+                 state.server = (state.server + pointsAfterDeuce) % 2 === 0 ? state.server : (state.server % 2) + 1;
+            } else {
+                const serves = Math.floor(totalScore / 2);
+                const initialServerForGame = (state.p1Games + state.p2Games) % 2 === 0 ? state.matchStartServer : (state.matchStartServer % 2) + 1;
+                state.server = serves % 2 === 0 ? initialServerForGame : (initialServerForGame % 2) + 1;
+            }
+        }
+        
+        function setInitialServerForNewGame() {
+            const totalGames = state.p1Games + state.p2Games;
+            state.server = totalGames % 2 === 0 ? state.matchStartServer : (state.matchStartServer % 2) + 1;
+        }
+
+        // --- STATE MANAGEMENT & UI UPDATES ---
+        function resetGame() {
+            state.p1Score = 0;
+            state.p2Score = 0;
+            setInitialServerForNewGame();
+            enableScoreButtons();
+        }
+
+        function resetMatch() {
+            state = { ...state, p1Score: 0, p2Score: 0, p1Games: 0, p2Games: 0, server: 0, matchOver: false, scoreHistory: [] };
+            handleMatchTypeChange();
+            winnerMessageContainer.innerHTML = '';
+            updateDisplay();
+            updateScoreHistoryDisplay();
+            disableScoreButtons();
+            showCoinTossModal();
+        }
+
+        function handleMatchTypeChange() {
+            state.gamesToWin = Math.ceil(parseInt(matchTypeSelect.value) / 2);
+        }
+
+        function updateDisplay() {
+            p1.scoreDisplay.textContent = state.p1Score;
+            p2.scoreDisplay.textContent = state.p2Score;
+            p1.gamesDisplay.textContent = state.p1Games;
+            p2.gamesDisplay.textContent = state.p2Games;
+            p1.serverIndicator.style.opacity = (state.server === 1 && !state.matchOver) ? '1' : '0';
+            p2.serverIndicator.style.opacity = (state.server === 2 && !state.matchOver) ? '1' : '0';
+            if (state.server === 1 && !state.matchOver) p1.container.classList.add('bg-cyan-900/40'); else p1.container.classList.remove('bg-cyan-900/40');
+            if (state.server === 2 && !state.matchOver) p2.container.classList.add('bg-cyan-900/40'); else p2.container.classList.remove('bg-cyan-900/40');
+        }
+
+        function updateScoreHistoryDisplay() {
+            mainScoreHistoryList.innerHTML = '';
+            if (state.scoreHistory.length === 0) {
+                mainScoreHistoryList.innerHTML = `<p class="text-gray-500 text-center">No games played yet.</p>`;
+            } else {
+                state.scoreHistory.forEach((game, index) => {
+                    const div = document.createElement('div');
+                    div.className = "flex justify-between items-center bg-gray-700/60 p-2 rounded-md text-sm";
+                    const gameWinnerName = game.p1Score > game.p2Score ? p1.nameDisplay.textContent : p2.nameDisplay.textContent;
+                    div.innerHTML = `<span><span class="font-bold text-gray-400">G${index + 1}:</span> ${gameWinnerName}</span><span class="font-bold">${game.p1Score} - ${game.p2Score}</span>`;
+                    mainScoreHistoryList.appendChild(div);
+                });
+            }
+        }
+        
+        function updateName(playerObj, value, defaultValue) {
+            const newName = value.trim() === '' ? defaultValue : value;
+            playerObj.nameDisplay.textContent = newName;
+            if (playerObj === p1) p1StartsBtn.textContent = `${newName} Starts`;
+            else p2StartsBtn.textContent = `${newName} Starts`;
+            updateScoreHistoryDisplay(); // Update names in history
+        }
+
+        function showWinnerMessage(message, isMatchWinner = false) {
+            winnerMessageContainer.innerHTML = '';
+            const messageEl = document.createElement('div');
+            messageEl.textContent = message;
+            messageEl.className = `winner-message font-bold text-2xl ${isMatchWinner ? 'text-green-400' : 'text-yellow-400'}`;
+            winnerMessageContainer.appendChild(messageEl);
+        }
+        
+        function disableScoreButtons() {
+            [p1.scoreBtn, p2.scoreBtn, p1.scoreMinusBtn, p2.scoreMinusBtn].forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+        }
+
+        function enableScoreButtons() {
+             [p1.scoreBtn, p2.scoreBtn, p1.scoreMinusBtn, p2.scoreMinusBtn].forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>
