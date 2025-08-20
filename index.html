@@ -3,161 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Table Tennis Scoreboard</title>
+    <title>Table Tennis Scoreboard (Sync)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            touch-action: manipulation; /* Prevents double-tap zoom on mobile  */
+            touch-action: manipulation;
         }
-        .player-score-container {
-            transition: background-color 0.3s ease;
-        }
-        .serving-indicator {
-            transition: opacity 0.3s ease;
-        }
-        .winner-message, .modal {
-            animation: fadeIn 0.5s ease-in-out;
+        .player-score-container, .serving-indicator, .modal, .winner-message {
+            transition: all 0.3s ease;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
         }
-        .modal-content {
-             animation: slideIn 0.4s ease-out;
-        }
+        .modal-content { animation: slideIn 0.4s ease-out; }
         @keyframes slideIn {
             from { transform: translateY(-30px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+        #mainApp.hidden { display: none; }
     </style>
 </head>
 <body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4">
 
-    <!-- Main Scoreboard App -->
-    <div class="w-full max-w-4xl mx-auto bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8">
-        
-        <header class="text-center mb-6">
-            <h1 class="text-3xl sm:text-4xl font-bold text-cyan-400">Table Tennis Scoreboard</h1>
-            <p class="text-gray-400 mt-1">First to 11 points wins the game. Win by 2.</p>
-        </header>
-
-        <!-- Player Name Inputs -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <input type="text" id="player1Name" class="w-full bg-gray-700 border-2 border-gray-600 rounded-lg p-3 text-center text-xl font-semibold focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Player 1 Name">
-            <input type="text" id="player2Name" class="w-full bg-gray-700 border-2 border-gray-600 rounded-lg p-3 text-center text-xl font-semibold focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500" placeholder="Player 2 Name">
-        </div>
-
-        <!-- Scoreboard Display -->
-        <div class="grid grid-cols-2 gap-2 sm:gap-4">
-            <!-- Player 1 Column -->
-            <div id="player1Container" class="player-score-container bg-gray-700/50 rounded-xl p-4 text-center flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-center gap-3">
-                        <div id="p1Server" class="serving-indicator w-4 h-4 bg-cyan-400 rounded-full shadow-lg opacity-0"></div>
-                        <h2 id="p1NameDisplay" class="text-2xl sm:text-3xl font-bold truncate">Player 1</h2>
-                    </div>
-                    <p class="text-7xl sm:text-8xl md:text-9xl font-black my-4" id="p1Score">0</p>
-                </div>
-                <div class="mt-auto">
-                    <p class="text-lg text-gray-400">Games Won</p>
-                    <p class="text-4xl font-bold" id="p1Games">0</p>
-                </div>
-            </div>
-
-            <!-- Player 2 Column -->
-            <div id="player2Container" class="player-score-container bg-gray-700/50 rounded-xl p-4 text-center flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-center gap-3">
-                         <div id="p2Server" class="serving-indicator w-4 h-4 bg-cyan-400 rounded-full shadow-lg opacity-0"></div>
-                        <h2 id="p2NameDisplay" class="text-2xl sm:text-3xl font-bold truncate">Player 2</h2>
-                    </div>
-                    <p class="text-7xl sm:text-8xl md:text-9xl font-black my-4" id="p2Score">0</p>
-                </div>
-                <div class="mt-auto">
-                    <p class="text-lg text-gray-400">Games Won</p>
-                    <p class="text-4xl font-bold" id="p2Games">0</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Score Buttons -->
-        <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-4">
-            <div class="flex gap-2">
-                <button id="p1ScoreBtn" class="w-3/4 bg-gradient-to-br from-green-500 to-green-600 text-white font-bold py-6 rounded-lg text-2xl shadow-lg hover:opacity-90 active:scale-95 transform transition-transform duration-150">+1</button>
-                <button id="p1ScoreMinusBtn" class="w-1/4 bg-gradient-to-br from-yellow-500 to-yellow-600 text-white font-bold py-6 rounded-lg text-2xl shadow-lg hover:opacity-90 active:scale-95 transform transition-transform duration-150">-1</button>
-            </div>
-            <div class="flex gap-2">
-                <button id="p2ScoreBtn" class="w-3/4 bg-gradient-to-br from-green-500 to-green-600 text-white font-bold py-6 rounded-lg text-2xl shadow-lg hover:opacity-90 active:scale-95 transform transition-transform duration-150">+1</button>
-                <button id="p2ScoreMinusBtn" class="w-1/4 bg-gradient-to-br from-yellow-500 to-yellow-600 text-white font-bold py-6 rounded-lg text-2xl shadow-lg hover:opacity-90 active:scale-95 transform transition-transform duration-150">-1</button>
-            </div>
-        </div>
-        
-        <!-- Score History -->
-        <div class="mt-6">
-            <h3 class="text-lg font-bold text-gray-400 text-center border-b border-gray-700 pb-2 mb-3">Game History</h3>
-            <div id="mainScoreHistoryList" class="space-y-2 max-h-24 overflow-y-auto p-2 rounded-lg bg-gray-900/30">
-                <!-- History will be populated here -->
-            </div>
-        </div>
-
-        <div id="winnerMessageContainer" class="text-center mt-6 min-h-[30px] flex items-center justify-center"></div>
-
-        <!-- Controls -->
-        <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-2">
-                <label for="matchType" class="font-semibold text-gray-300">Match:</label>
-                <select id="matchType" class="bg-gray-700 border border-gray-600 rounded-md p-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500">
-                    <option value="3">Best of 3</option>
-                    <option value="5" selected>Best of 5</option>
-                    <option value="7">Best of 7</option>
-                </select>
-            </div>
-            <button id="resetBtn" class="w-full sm:w-auto bg-gradient-to-br from-red-600 to-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:opacity-90 active:scale-95 transform transition-transform duration-150">New Match</button>
-        </div>
-    </div>
-
-    <!-- Coin Toss Modal -->
-    <div id="coinTossModal" class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
+    <!-- Match Connection Modal -->
+    <div id="connectionModal" class="modal fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50">
         <div class="modal-content bg-gray-800 rounded-2xl shadow-2xl p-8 text-center w-full max-w-md">
-            <h2 class="text-3xl font-bold text-cyan-400 mb-4">Coin Toss</h2>
-            <p class="text-gray-300 mb-6">Winner chooses who serves first.</p>
-            <div id="tossChoiceContainer" class="flex justify-center gap-4 mb-6">
-                <button id="headsBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg">Heads</button>
-                <button id="tailsBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-lg">Tails</button>
-            </div>
-            <div id="tossResultContainer" class="text-center min-h-[80px]">
-                <p id="tossResultText" class="text-2xl font-bold text-yellow-400"></p>
-            </div>
-            <div id="serverChoiceContainer" class="hidden mt-4">
-                <p class="text-gray-300 mb-4">Who will serve first?</p>
-                <div class="flex justify-center gap-4">
-                    <button id="p1StartsBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg"></button>
-                    <button id="p2StartsBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg"></button>
+            <h2 class="text-3xl font-bold text-cyan-400 mb-4">Connect to Match</h2>
+            <p class="text-gray-400 mb-6">Create a match on one device, then join it from another using the Match ID.</p>
+            <div class="space-y-4">
+                <button id="createMatchBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-lg">Create New Match</button>
+                <div class="flex items-center gap-2">
+                    <hr class="w-full border-gray-600">
+                    <span class="text-gray-500">OR</span>
+                    <hr class="w-full border-gray-600">
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="matchIdInput" placeholder="Enter Match ID" class="w-full bg-gray-700 border-2 border-gray-600 rounded-lg p-3 text-center text-lg focus:outline-none focus:border-cyan-500">
+                    <button id="joinMatchBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">Join</button>
                 </div>
             </div>
+            <p id="connectionError" class="text-red-400 mt-4 min-h-[24px]"></p>
         </div>
     </div>
 
-    <!-- Game End Modal -->
-    <div id="gameEndModal" class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-gray-800 rounded-2xl shadow-2xl p-8 text-center w-full max-w-md">
-            <h2 id="gameEndTitle" class="text-3xl font-bold text-cyan-400 mb-2">Game Over</h2>
-            <p id="gameEndWinner" class="text-xl font-semibold text-yellow-400 mb-4"></p>
-            <div class="bg-gray-900/50 rounded-lg p-4 mb-6">
-                <h3 class="text-lg font-bold text-gray-300 border-b border-gray-600 pb-2 mb-3">Score History</h3>
-                <ul id="modalScoreHistoryList" class="text-left space-y-2">
-                    <!-- Score history will be populated here -->
-                </ul>
+    <!-- Main Scoreboard App (Initially Hidden) -->
+    <div id="mainApp" class="w-full max-w-4xl mx-auto hidden">
+        <div class="bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8">
+            <header class="text-center mb-4">
+                <h1 class="text-3xl sm:text-4xl font-bold text-cyan-400">Table Tennis Scoreboard</h1>
+                <div class="mt-2 bg-gray-900/50 rounded-md p-2 flex items-center justify-center gap-2">
+                    <span class="text-gray-400">Match ID:</span>
+                    <span id="matchIdDisplay" class="font-mono font-bold text-yellow-400"></span>
+                    <button id="copyMatchIdBtn" class="ml-2 text-gray-400 hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Player Name Inputs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <input type="text" id="player1Name" class="w-full bg-gray-700 border-2 border-gray-600 rounded-lg p-3 text-center text-xl font-semibold focus:outline-none focus:border-cyan-500" placeholder="Player 1 Name">
+                <input type="text" id="player2Name" class="w-full bg-gray-700 border-2 border-gray-600 rounded-lg p-3 text-center text-xl font-semibold focus:outline-none focus:border-cyan-500" placeholder="Player 2 Name">
             </div>
-            <button id="nextGameBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-lg">Start Next Game</button>
+
+            <!-- Scoreboard Display -->
+            <div class="grid grid-cols-2 gap-2 sm:gap-4">
+                <div id="player1Container" class="player-score-container bg-gray-700/50 rounded-xl p-4 text-center flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-center gap-3">
+                            <div id="p1Server" class="serving-indicator w-4 h-4 bg-cyan-400 rounded-full shadow-lg opacity-0"></div>
+                            <h2 id="p1NameDisplay" class="text-2xl sm:text-3xl font-bold truncate">Player 1</h2>
+                        </div>
+                        <p class="text-7xl sm:text-8xl md:text-9xl font-black my-4" id="p1Score">0</p>
+                    </div>
+                    <div class="mt-auto">
+                        <p class="text-lg text-gray-400">Games Won</p>
+                        <p class="text-4xl font-bold" id="p1Games">0</p>
+                    </div>
+                </div>
+                <div id="player2Container" class="player-score-container bg-gray-700/50 rounded-xl p-4 text-center flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-center gap-3">
+                            <div id="p2Server" class="serving-indicator w-4 h-4 bg-cyan-400 rounded-full shadow-lg opacity-0"></div>
+                            <h2 id="p2NameDisplay" class="text-2xl sm:text-3xl font-bold truncate">Player 2</h2>
+                        </div>
+                        <p class="text-7xl sm:text-8xl md:text-9xl font-black my-4" id="p2Score">0</p>
+                    </div>
+                    <div class="mt-auto">
+                        <p class="text-lg text-gray-400">Games Won</p>
+                        <p class="text-4xl font-bold" id="p2Games">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Score Buttons -->
+            <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-4">
+                <div class="flex gap-2">
+                    <button id="p1ScoreBtn" class="w-3/4 bg-gradient-to-br from-green-500 to-green-600 text-white font-bold py-6 rounded-lg text-2xl shadow-lg hover:opacity-90 active:scale-95 transform transition-transform duration-150">+1</button>
+                    <button id="p1ScoreMinusBtn" class="w-1/4 bg-gradient-to-br from-yellow-500 to-yellow-600 text-white font-bold py-6 rounded-lg text-2xl shadow-lg hover:opacity-90 active:scale-95 transform transition-transform duration-150">-1</button>
+                </div>
+                <div class="flex gap-2">
+                    <button id="p2ScoreBtn" class="w-3/4 bg-gradient-to-br from-green-500 to-green-600 text-white font-bold py-6 rounded-lg text-2xl shadow-lg hover:opacity-90 active:scale-95 transform transition-transform duration-150">+1</button>
+                    <button id="p2ScoreMinusBtn" class="w-1/4 bg-gradient-to-br from-yellow-500 to-yellow-600 text-white font-bold py-6 rounded-lg text-2xl shadow-lg hover:opacity-90 active:scale-95 transform transition-transform duration-150">-1</button>
+                </div>
+            </div>
+            
+            <!-- Score History -->
+            <div class="mt-6">
+                <h3 class="text-lg font-bold text-gray-400 text-center border-b border-gray-700 pb-2 mb-3">Game History</h3>
+                <div id="mainScoreHistoryList" class="space-y-2 max-h-24 overflow-y-auto p-2 rounded-lg bg-gray-900/30"></div>
+            </div>
+
+            <div id="winnerMessageContainer" class="text-center mt-6 min-h-[30px] flex items-center justify-center"></div>
+
+            <!-- Controls -->
+            <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <label for="matchType" class="font-semibold text-gray-300">Match:</label>
+                    <select id="matchType" class="bg-gray-700 border border-gray-600 rounded-md p-2 focus:outline-none focus:border-cyan-500">
+                        <option value="3">Best of 3</option>
+                        <option value="5" selected>Best of 5</option>
+                        <option value="7">Best of 7</option>
+                    </select>
+                </div>
+                <button id="resetBtn" class="w-full sm:w-auto bg-gradient-to-br from-red-600 to-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:opacity-90">New Match</button>
+            </div>
         </div>
     </div>
 
+    <!-- Modals (Coin Toss, Game End) will be dynamically controlled -->
+    <div id="modalContainer"></div>
 
-    <script>
-        // DOM Elements
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- GLOBAL VARS & CONFIG ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        
+        let db, auth;
+        let currentMatchId = null;
+        let unsubscribeFromMatch = null; // To store the onSnapshot listener cleanup function
+        let localState = {}; // Local copy of the database state
+
+        // --- DOM ELEMENTS ---
+        const mainApp = document.getElementById('mainApp');
+        const connectionModal = document.getElementById('connectionModal');
+        const createMatchBtn = document.getElementById('createMatchBtn');
+        const joinMatchBtn = document.getElementById('joinMatchBtn');
+        const matchIdInput = document.getElementById('matchIdInput');
+        const connectionError = document.getElementById('connectionError');
+        const matchIdDisplay = document.getElementById('matchIdDisplay');
+        const copyMatchIdBtn = document.getElementById('copyMatchIdBtn');
+        const modalContainer = document.getElementById('modalContainer');
+
         const p1 = { nameInput: document.getElementById('player1Name'), nameDisplay: document.getElementById('p1NameDisplay'), scoreDisplay: document.getElementById('p1Score'), gamesDisplay: document.getElementById('p1Games'), scoreBtn: document.getElementById('p1ScoreBtn'), scoreMinusBtn: document.getElementById('p1ScoreMinusBtn'), serverIndicator: document.getElementById('p1Server'), container: document.getElementById('player1Container') };
         const p2 = { nameInput: document.getElementById('player2Name'), nameDisplay: document.getElementById('p2NameDisplay'), scoreDisplay: document.getElementById('p2Score'), gamesDisplay: document.getElementById('p2Games'), scoreBtn: document.getElementById('p2ScoreBtn'), scoreMinusBtn: document.getElementById('p2ScoreMinusBtn'), serverIndicator: document.getElementById('p2Server'), container: document.getElementById('player2Container') };
         const resetBtn = document.getElementById('resetBtn');
@@ -165,256 +170,304 @@
         const winnerMessageContainer = document.getElementById('winnerMessageContainer');
         const mainScoreHistoryList = document.getElementById('mainScoreHistoryList');
 
-        // Coin Toss Modal Elements
-        const coinTossModal = document.getElementById('coinTossModal');
-        const headsBtn = document.getElementById('headsBtn');
-        const tailsBtn = document.getElementById('tailsBtn');
-        const tossResultText = document.getElementById('tossResultText');
-        const serverChoiceContainer = document.getElementById('serverChoiceContainer');
-        const p1StartsBtn = document.getElementById('p1StartsBtn');
-        const p2StartsBtn = document.getElementById('p2StartsBtn');
-        const tossChoiceContainer = document.getElementById('tossChoiceContainer');
-
-        // Game End Modal Elements
-        const gameEndModal = document.getElementById('gameEndModal');
-        const gameEndTitle = document.getElementById('gameEndTitle');
-        const gameEndWinner = document.getElementById('gameEndWinner');
-        const modalScoreHistoryList = document.getElementById('modalScoreHistoryList');
-        const nextGameBtn = document.getElementById('nextGameBtn');
-
-        // Game State
-        let state = { p1Score: 0, p2Score: 0, p1Games: 0, p2Games: 0, server: 0, matchStartServer: 1, matchOver: false, gamesToWin: 3, scoreHistory: [] };
-
         // --- INITIALIZATION ---
-        function initialize() {
-            updateDisplay();
-            addEventListeners();
-            disableScoreButtons();
-            showCoinTossModal();
-            updateScoreHistoryDisplay();
+        async function initialize() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                console.log("Firebase initialized and user signed in.");
+                addEventListeners();
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                connectionError.textContent = "Could not connect to the service.";
+            }
         }
 
         function addEventListeners() {
+            createMatchBtn.addEventListener('click', createNewMatch);
+            joinMatchBtn.addEventListener('click', joinExistingMatch);
+            copyMatchIdBtn.addEventListener('click', copyMatchIdToClipboard);
+
+            // Debounced name update
+            let nameUpdateTimeout;
+            p1.nameInput.addEventListener('input', () => {
+                clearTimeout(nameUpdateTimeout);
+                nameUpdateTimeout = setTimeout(() => updateFirestore({ p1Name: p1.nameInput.value || 'Player 1' }), 500);
+            });
+            p2.nameInput.addEventListener('input', () => {
+                clearTimeout(nameUpdateTimeout);
+                nameUpdateTimeout = setTimeout(() => updateFirestore({ p2Name: p2.nameInput.value || 'Player 2' }), 500);
+            });
+
+            // Score buttons
             p1.scoreBtn.addEventListener('click', () => handleScore(1));
             p2.scoreBtn.addEventListener('click', () => handleScore(2));
             p1.scoreMinusBtn.addEventListener('click', () => handleScoreCorrection(1));
             p2.scoreMinusBtn.addEventListener('click', () => handleScoreCorrection(2));
-            resetBtn.addEventListener('click', resetMatch);
-            matchTypeSelect.addEventListener('change', handleMatchTypeChange);
-            p1.nameInput.addEventListener('input', (e) => updateName(p1, e.target.value, 'Player 1'));
-            p2.nameInput.addEventListener('input', (e) => updateName(p2, e.target.value, 'Player 2'));
-            headsBtn.addEventListener('click', () => handleCoinToss('Heads'));
-            tailsBtn.addEventListener('click', () => handleCoinToss('Tails'));
-            p1StartsBtn.addEventListener('click', () => selectInitialServer(1));
-            p2StartsBtn.addEventListener('click', () => selectInitialServer(2));
-            nextGameBtn.addEventListener('click', handleNextGame);
-        }
 
-        // --- MODAL LOGIC (COIN TOSS & GAME END) ---
-        function showCoinTossModal() {
-            p1StartsBtn.textContent = `${p1.nameDisplay.textContent} Starts`;
-            p2StartsBtn.textContent = `${p2.nameDisplay.textContent} Starts`;
-            coinTossModal.classList.remove('hidden');
-            serverChoiceContainer.classList.add('hidden');
-            tossChoiceContainer.classList.remove('hidden');
-            tossResultText.textContent = '';
-            headsBtn.disabled = false;
-            tailsBtn.disabled = false;
-        }
-
-        function handleCoinToss(choice) {
-            headsBtn.disabled = true;
-            tailsBtn.disabled = true;
-            const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
-            tossResultText.textContent = `It's ${result}!`;
-            setTimeout(() => {
-                tossChoiceContainer.classList.add('hidden');
-                serverChoiceContainer.classList.remove('hidden');
-            }, 1500);
-        }
-        
-        function selectInitialServer(player) {
-            state.matchStartServer = player;
-            state.server = player;
-            coinTossModal.classList.add('hidden');
-            enableScoreButtons();
-            updateDisplay();
-        }
-
-        function showGameEndModal() {
-            const lastGame = state.scoreHistory[state.scoreHistory.length - 1];
-            const winnerName = lastGame.p1Score > lastGame.p2Score ? p1.nameDisplay.textContent : p2.nameDisplay.textContent;
-            gameEndWinner.textContent = `${winnerName} wins the game ${lastGame.p1Score} - ${lastGame.p2Score}`;
-            
-            // Populate score history in the modal
-            modalScoreHistoryList.innerHTML = '';
-            state.scoreHistory.forEach((game, index) => {
-                const li = document.createElement('li');
-                li.className = "flex justify-between items-center bg-gray-700/50 p-2 rounded-md";
-                const gameWinner = game.p1Score > game.p2Score ? p1.nameDisplay.textContent : p2.nameDisplay.textContent;
-                li.innerHTML = `<span><span class="font-bold text-gray-400">Game ${index + 1}:</span> ${gameWinner}</span><span class="font-bold text-lg">${game.p1Score} - ${game.p2Score}</span>`;
-                modalScoreHistoryList.appendChild(li);
+            // Controls
+            resetBtn.addEventListener('click', () => {
+                // Show a confirmation before resetting
+                if (confirm("Are you sure you want to reset the entire match? This will start a new coin toss.")) {
+                    resetMatch();
+                }
             });
-
-            if (state.matchOver) {
-                gameEndTitle.textContent = "Match Over!";
-                nextGameBtn.textContent = "View Final Results";
-            } else {
-                gameEndTitle.textContent = "Game Over";
-                nextGameBtn.textContent = "Start Next Game";
-            }
-            gameEndModal.classList.remove('hidden');
+            matchTypeSelect.addEventListener('change', () => {
+                const newGamesToWin = Math.ceil(parseInt(matchTypeSelect.value) / 2);
+                updateFirestore({ gamesToWin: newGamesToWin, matchType: matchTypeSelect.value });
+            });
         }
 
-        function handleNextGame() {
-            gameEndModal.classList.add('hidden');
-            if (!state.matchOver) {
-                resetGame();
-                updateDisplay();
-            }
+        // --- FIREBASE & MATCH MANAGEMENT ---
+
+        function getInitialState() {
+            return {
+                p1Score: 0, p2Score: 0, p1Games: 0, p2Games: 0,
+                p1Name: 'Player 1', p2Name: 'Player 2',
+                server: 0, matchStartServer: 0, matchOver: false,
+                gamesToWin: 3, matchType: '5', scoreHistory: [],
+                uiState: 'coinToss' // 'coinToss', 'playing', 'gameEnd'
+            };
         }
 
-        // --- CORE GAME LOGIC ---
-        function handleScore(player) {
-            if (state.matchOver) return;
-            if (player === 1) state.p1Score++; else state.p2Score++;
-            checkGameWin();
-            if (!state.matchOver) updateServer();
-            updateDisplay();
-        }
-
-        function handleScoreCorrection(player) {
-            if (state.matchOver) return;
-            if (player === 1 && state.p1Score > 0) state.p1Score--;
-            else if (player === 2 && state.p2Score > 0) state.p2Score--;
-            updateServer();
-            updateDisplay();
-        }
-
-        function checkGameWin() {
-            const { p1Score, p2Score } = state;
-            const p1Wins = p1Score >= 11 && p1Score >= p2Score + 2;
-            const p2Wins = p2Score >= 11 && p2Score >= p1Score + 2;
-
-            if (p1Wins || p2Wins) {
-                if (p1Wins) state.p1Games++;
-                if (p2Wins) state.p2Games++;
-                
-                state.scoreHistory.push({ p1Score: state.p1Score, p2Score: state.p2Score });
-                updateScoreHistoryDisplay();
-                checkMatchWin();
-                showGameEndModal();
-                updateDisplay();
-                disableScoreButtons();
-            }
-        }
-        
-        function checkMatchWin() {
-            const p1MatchWin = state.p1Games === state.gamesToWin;
-            const p2MatchWin = state.p2Games === state.gamesToWin;
-            if (p1MatchWin || p2MatchWin) {
-                state.matchOver = true;
-                const winnerName = p1MatchWin ? p1.nameDisplay.textContent : p2.nameDisplay.textContent;
-                showWinnerMessage(`${winnerName} WINS THE MATCH!`, true);
+        async function createNewMatch() {
+            const matchRef = doc(collection(db, `artifacts/${appId}/public/data/matches`));
+            const matchId = matchRef.id.substring(0, 6).toUpperCase();
+            const initialState = getInitialState();
+            try {
+                await setDoc(doc(db, `artifacts/${appId}/public/data/matches`, matchId), initialState);
+                await connectToMatch(matchId);
+            } catch (error) {
+                console.error("Error creating match:", error);
+                connectionError.textContent = "Failed to create match.";
             }
         }
 
-        function updateServer() {
-            const totalScore = state.p1Score + state.p2Score;
-            if (state.p1Score >= 10 && state.p2Score >= 10) {
-                 const pointsAfterDeuce = totalScore - 20;
-                 state.server = (state.server + pointsAfterDeuce) % 2 === 0 ? state.server : (state.server % 2) + 1;
-            } else {
-                const serves = Math.floor(totalScore / 2);
-                const initialServerForGame = (state.p1Games + state.p2Games) % 2 === 0 ? state.matchStartServer : (state.matchStartServer % 2) + 1;
-                state.server = serves % 2 === 0 ? initialServerForGame : (initialServerForGame % 2) + 1;
+        async function joinExistingMatch() {
+            const matchId = matchIdInput.value.toUpperCase().trim();
+            if (!matchId) {
+                connectionError.textContent = "Please enter a Match ID.";
+                return;
+            }
+            const matchRef = doc(db, `artifacts/${appId}/public/data/matches`, matchId);
+            try {
+                const matchSnap = await getDoc(matchRef);
+                if (matchSnap.exists()) {
+                    await connectToMatch(matchId);
+                } else {
+                    connectionError.textContent = "Match ID not found.";
+                }
+            } catch (error) {
+                console.error("Error joining match:", error);
+                connectionError.textContent = "Could not join match.";
             }
         }
-        
-        function setInitialServerForNewGame() {
-            const totalGames = state.p1Games + state.p2Games;
-            state.server = totalGames % 2 === 0 ? state.matchStartServer : (state.matchStartServer % 2) + 1;
+
+        async function connectToMatch(matchId) {
+            if (unsubscribeFromMatch) {
+                unsubscribeFromMatch(); // Stop listening to the old match if any
+            }
+            currentMatchId = matchId;
+            const matchRef = doc(db, `artifacts/${appId}/public/data/matches`, currentMatchId);
+            
+            unsubscribeFromMatch = onSnapshot(matchRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    localState = docSnap.data();
+                    renderUI();
+                    if (mainApp.classList.contains('hidden')) {
+                         connectionModal.classList.add('hidden');
+                         mainApp.classList.remove('hidden');
+                    }
+                } else {
+                    // Handle case where match is deleted remotely
+                    alert("The match has been disconnected.");
+                    location.reload();
+                }
+            });
         }
 
-        // --- STATE MANAGEMENT & UI UPDATES ---
-        function resetGame() {
-            state.p1Score = 0;
-            state.p2Score = 0;
-            setInitialServerForNewGame();
-            enableScoreButtons();
+        async function updateFirestore(updates) {
+            if (!currentMatchId) return;
+            const matchRef = doc(db, `artifacts/${appId}/public/data/matches`, currentMatchId);
+            try {
+                await updateDoc(matchRef, updates);
+            } catch (error) {
+                console.error("Error updating Firestore:", error);
+            }
         }
 
-        function resetMatch() {
-            state = { ...state, p1Score: 0, p2Score: 0, p1Games: 0, p2Games: 0, server: 0, matchOver: false, scoreHistory: [] };
-            handleMatchTypeChange();
-            winnerMessageContainer.innerHTML = '';
-            updateDisplay();
+        // --- UI RENDERING ---
+
+        function renderUI() {
+            // Update scores and games
+            p1.scoreDisplay.textContent = localState.p1Score;
+            p2.scoreDisplay.textContent = localState.p2Score;
+            p1.gamesDisplay.textContent = localState.p1Games;
+            p2.gamesDisplay.textContent = localState.p2Games;
+            
+            // Update names (only if not focused to avoid typing issues)
+            if (document.activeElement !== p1.nameInput) p1.nameInput.value = localState.p1Name;
+            if (document.activeElement !== p2.nameInput) p2.nameInput.value = localState.p2Name;
+            p1.nameDisplay.textContent = localState.p1Name;
+            p2.nameDisplay.textContent = localState.p2Name;
+
+            // Update server indicators
+            p1.serverIndicator.style.opacity = (localState.server === 1 && !localState.matchOver) ? '1' : '0';
+            p2.serverIndicator.style.opacity = (localState.server === 2 && !localState.matchOver) ? '1' : '0';
+            p1.container.classList.toggle('bg-cyan-900/40', localState.server === 1 && !localState.matchOver);
+            p2.container.classList.toggle('bg-cyan-900/40', localState.server === 2 && !localState.matchOver);
+
+            // Update controls
+            matchIdDisplay.textContent = currentMatchId;
+            matchTypeSelect.value = localState.matchType;
+
+            // Render Modals based on uiState
+            renderModal();
             updateScoreHistoryDisplay();
-            disableScoreButtons();
-            showCoinTossModal();
+
+            // Disable/Enable buttons
+            const isPlaying = localState.uiState === 'playing';
+            [p1.scoreBtn, p2.scoreBtn, p1.scoreMinusBtn, p2.scoreMinusBtn].forEach(btn => {
+                btn.disabled = !isPlaying || localState.matchOver;
+                btn.classList.toggle('opacity-50', !isPlaying || localState.matchOver);
+            });
         }
 
-        function handleMatchTypeChange() {
-            state.gamesToWin = Math.ceil(parseInt(matchTypeSelect.value) / 2);
-        }
-
-        function updateDisplay() {
-            p1.scoreDisplay.textContent = state.p1Score;
-            p2.scoreDisplay.textContent = state.p2Score;
-            p1.gamesDisplay.textContent = state.p1Games;
-            p2.gamesDisplay.textContent = state.p2Games;
-            p1.serverIndicator.style.opacity = (state.server === 1 && !state.matchOver) ? '1' : '0';
-            p2.serverIndicator.style.opacity = (state.server === 2 && !state.matchOver) ? '1' : '0';
-            if (state.server === 1 && !state.matchOver) p1.container.classList.add('bg-cyan-900/40'); else p1.container.classList.remove('bg-cyan-900/40');
-            if (state.server === 2 && !state.matchOver) p2.container.classList.add('bg-cyan-900/40'); else p2.container.classList.remove('bg-cyan-900/40');
+        function renderModal() {
+            modalContainer.innerHTML = ''; // Clear previous modals
+            if (localState.uiState === 'coinToss') {
+                modalContainer.innerHTML = `
+                    <div class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+                        <div class="modal-content bg-gray-800 rounded-2xl shadow-2xl p-8 text-center w-full max-w-md">
+                            <h2 class="text-3xl font-bold text-cyan-400 mb-4">Coin Toss</h2>
+                            <p class="text-gray-300 mb-6">Winner chooses who serves first.</p>
+                            <div id="serverChoiceContainer" class="hidden mt-4">
+                                <p class="text-gray-300 mb-4">Who will serve first?</p>
+                                <div class="flex justify-center gap-4">
+                                    <button onclick="window.selectInitialServer(1)" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">${localState.p1Name}</button>
+                                    <button onclick="window.selectInitialServer(2)" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">${localState.p2Name}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                // Simple logic for one player to decide
+                document.getElementById('serverChoiceContainer').classList.remove('hidden');
+            } else if (localState.uiState === 'gameEnd') {
+                 const lastGame = localState.scoreHistory[localState.scoreHistory.length - 1];
+                 const winnerName = lastGame.p1Score > lastGame.p2Score ? localState.p1Name : localState.p2Name;
+                 modalContainer.innerHTML = `
+                    <div class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+                        <div class="modal-content bg-gray-800 rounded-2xl shadow-2xl p-8 text-center w-full max-w-md">
+                            <h2 class="text-3xl font-bold text-cyan-400 mb-2">${localState.matchOver ? 'Match Over!' : 'Game Over'}</h2>
+                            <p class="text-xl font-semibold text-yellow-400 mb-4">${winnerName} wins the game ${lastGame.p1Score} - ${lastGame.p2Score}</p>
+                            <button onclick="window.handleNextGame()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-lg">${localState.matchOver ? 'View Final Results' : 'Start Next Game'}</button>
+                        </div>
+                    </div>`;
+            }
         }
 
         function updateScoreHistoryDisplay() {
             mainScoreHistoryList.innerHTML = '';
-            if (state.scoreHistory.length === 0) {
+            if (localState.scoreHistory?.length === 0) {
                 mainScoreHistoryList.innerHTML = `<p class="text-gray-500 text-center">No games played yet.</p>`;
             } else {
-                state.scoreHistory.forEach((game, index) => {
+                localState.scoreHistory?.forEach((game, index) => {
                     const div = document.createElement('div');
                     div.className = "flex justify-between items-center bg-gray-700/60 p-2 rounded-md text-sm";
-                    const gameWinnerName = game.p1Score > game.p2Score ? p1.nameDisplay.textContent : p2.nameDisplay.textContent;
+                    const gameWinnerName = game.p1Score > game.p2Score ? localState.p1Name : localState.p2Name;
                     div.innerHTML = `<span><span class="font-bold text-gray-400">G${index + 1}:</span> ${gameWinnerName}</span><span class="font-bold">${game.p1Score} - ${game.p2Score}</span>`;
                     mainScoreHistoryList.appendChild(div);
                 });
             }
         }
+
+        // --- GAME LOGIC (ACTIONS THAT UPDATE FIRESTORE) ---
         
-        function updateName(playerObj, value, defaultValue) {
-            const newName = value.trim() === '' ? defaultValue : value;
-            playerObj.nameDisplay.textContent = newName;
-            if (playerObj === p1) p1StartsBtn.textContent = `${newName} Starts`;
-            else p2StartsBtn.textContent = `${newName} Starts`;
-            updateScoreHistoryDisplay(); // Update names in history
+        window.selectInitialServer = (player) => {
+            updateFirestore({ matchStartServer: player, server: player, uiState: 'playing' });
         }
 
-        function showWinnerMessage(message, isMatchWinner = false) {
-            winnerMessageContainer.innerHTML = '';
-            const messageEl = document.createElement('div');
-            messageEl.textContent = message;
-            messageEl.className = `winner-message font-bold text-2xl ${isMatchWinner ? 'text-green-400' : 'text-yellow-400'}`;
-            winnerMessageContainer.appendChild(messageEl);
-        }
-        
-        function disableScoreButtons() {
-            [p1.scoreBtn, p2.scoreBtn, p1.scoreMinusBtn, p2.scoreMinusBtn].forEach(btn => {
-                btn.disabled = true;
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
-            });
+        window.handleNextGame = () => {
+            if (localState.matchOver) {
+                updateFirestore({ uiState: 'playing' }); // Just closes the modal
+            } else {
+                const totalGames = localState.p1Games + localState.p2Games;
+                const nextServer = totalGames % 2 === 0 ? localState.matchStartServer : (localState.matchStartServer % 2) + 1;
+                updateFirestore({ p1Score: 0, p2Score: 0, server: nextServer, uiState: 'playing' });
+            }
         }
 
-        function enableScoreButtons() {
-             [p1.scoreBtn, p2.scoreBtn, p1.scoreMinusBtn, p2.scoreMinusBtn].forEach(btn => {
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-            });
+        function handleScore(player) {
+            let { p1Score, p2Score, ...rest } = localState;
+            player === 1 ? p1Score++ : p2Score++;
+            const totalScore = p1Score + p2Score;
+
+            // Check for game win
+            const p1Wins = p1Score >= 11 && p1Score >= p2Score + 2;
+            const p2Wins = p2Score >= 11 && p2Score >= p1Score + 2;
+
+            if (p1Wins || p2Wins) {
+                let { p1Games, p2Games, scoreHistory, gamesToWin } = rest;
+                p1Wins ? p1Games++ : p2Games++;
+                scoreHistory.push({ p1Score, p2Score });
+                
+                const matchOver = p1Games === gamesToWin || p2Games === gamesToWin;
+                updateFirestore({ p1Score, p2Score, p1Games, p2Games, scoreHistory, matchOver, uiState: 'gameEnd' });
+            } else {
+                 // Update server
+                let server = rest.server;
+                if (p1Score >= 10 && p2Score >= 10) {
+                    server = rest.server === 1 ? 2 : 1; // Simple toggle for deuce
+                } else {
+                    const serves = Math.floor(totalScore / 2);
+                    const initialServerForGame = (rest.p1Games + rest.p2Games) % 2 === 0 ? rest.matchStartServer : (rest.matchStartServer % 2) + 1;
+                    server = serves % 2 === 0 ? initialServerForGame : (initialServerForGame % 2) + 1;
+                }
+                updateFirestore({ p1Score, p2Score, server });
+            }
         }
 
+        function handleScoreCorrection(player) {
+            let { p1Score, p2Score } = localState;
+            if (player === 1 && p1Score > 0) p1Score--;
+            else if (player === 2 && p2Score > 0) p2Score--;
+            
+            // Recalculate server based on new score
+            const totalScore = p1Score + p2Score;
+            let server = localState.server;
+            if (p1Score >= 10 && p2Score >= 10) {
+                 server = localState.server === 1 ? 2 : 1;
+            } else {
+                const serves = Math.floor(totalScore / 2);
+                const initialServerForGame = (localState.p1Games + localState.p2Games) % 2 === 0 ? localState.matchStartServer : (localState.matchStartServer % 2) + 1;
+                server = serves % 2 === 0 ? initialServerForGame : (initialServerForGame % 2) + 1;
+            }
+            updateFirestore({ p1Score, p2Score, server });
+        }
+
+        function resetMatch() {
+            updateFirestore(getInitialState());
+        }
+
+        function copyMatchIdToClipboard() {
+            const tempInput = document.createElement('input');
+            tempInput.value = currentMatchId;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert(`Match ID "${currentMatchId}" copied to clipboard!`);
+        }
+
+        // --- START THE APP ---
         document.addEventListener('DOMContentLoaded', initialize);
+
     </script>
 </body>
 </html>
